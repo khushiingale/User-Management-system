@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>User Management</h2>
+
+    <!-- Add User Form -->
+    <h3>Add User</h3>
+    <input type="text" id="name" placeholder="Enter Name">
+    <input type="text" id="email" placeholder="Enter Email">
+    <button onclick="addUser()">Add User</button>
+
+    <hr>
+
+    <!-- Fetch Users Button -->
+    <button onclick="fetchUsers()">Fetch All Users</button>
+
+    <!-- User Table -->
+    <h3>All Users</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+
+</body>
+
+<script>
+const API_URL = "http://localhost:5000/api/user";
+
+// Fetch All Users
+function fetchUsers() {
+    fetch(`${API_URL}/getallusers`)
+        .then(response => response.json())
+        .then(data => {
+            const userTable = document.getElementById("userTableBody");
+            userTable.innerHTML = ""; // Clear previous data
+
+            data.forEach(user => {
+                userTable.innerHTML += `
+                    <tr>
+                        <td>${user._id}</td>
+                        <td><input type="text" id="name-${user._id}" value="${user.name}"></td>
+                        <td><input type="text" id="email-${user._id}" value="${user.email}"></td>
+                        <td>
+                            <button onclick="updateUser('${user._id}')">Update</button>
+                            <button onclick="deleteUser('${user._id}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => console.error("Error fetching users:", error));
+}
+
+// Add User
+function addUser() {
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+
+    fetch(`${API_URL}/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email })
+    })
+    .then(response => response.json())
+    .then(() => {
+        alert("User added successfully!");
+        fetchUsers(); // Refresh user list
+    })
+    .catch(error => console.error("Error adding user:", error));
+}
+
+// Update User
+function updateUser(userId) {
+    const name = document.getElementById(`name-${userId}`).value;
+    const email = document.getElementById(`email-${userId}`).value;
+
+    fetch(`${API_URL}/update/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email })
+    })
+    .then(response => response.json())
+    .then(() => {
+        alert("User updated successfully!");
+        fetchUsers();
+    })
+    .catch(error => console.error("Error updating user:", error));
+}
+
+// Delete User
+function deleteUser(userId) {
+    fetch(`${API_URL}/delete/${userId}`, {
+        method: "DELETE"
+    })
+    .then(response => response.json())
+    .then(() => {
+        alert("User deleted successfully!");
+        fetchUsers();
+    })
+    .catch(error => console.error("Error deleting user:", error));
+}
+
+</script>
+
+</html>
